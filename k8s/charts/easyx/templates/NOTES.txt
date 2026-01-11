@@ -1,0 +1,37 @@
+
+EasyX Crypto Exchange Platform has been deployed!
+
+{{- if .Values.ingress.enabled }}
+Your application is available at:
+
+  API:   https://{{ .Values.ingress.hosts.api.host }}
+  Web:   https://{{ .Values.ingress.hosts.web.host }}
+  Admin: https://{{ .Values.ingress.hosts.admin.host }}
+{{- end }}
+
+To check the status of your deployment:
+
+  kubectl get pods -n {{ .Release.Namespace }} -l app.kubernetes.io/instance={{ .Release.Name }}
+
+To view logs:
+
+  kubectl logs -n {{ .Release.Namespace }} -l app.kubernetes.io/component=api -f
+
+To run database migrations manually:
+
+  kubectl exec -n {{ .Release.Namespace }} deployment/{{ include "easyx.fullname" . }}-api -- npx prisma migrate deploy
+
+To seed the database:
+
+  kubectl exec -n {{ .Release.Namespace }} deployment/{{ include "easyx.fullname" . }}-api -- npx prisma db seed
+
+{{- if .Values.blockchain.enabled }}
+
+Blockchain watchers are {{ if .Values.blockchain.btc.enabled }}ENABLED{{ else }}DISABLED{{ end }} for:
+  - BTC: {{ .Values.blockchain.btc.enabled }}
+  - LTC: {{ .Values.blockchain.ltc.enabled }}
+  - ETH: {{ .Values.blockchain.eth.enabled }}
+  - TRON: {{ .Values.blockchain.tron.enabled }}
+{{- end }}
+
+For more information, visit: https://github.com/your-org/easyx

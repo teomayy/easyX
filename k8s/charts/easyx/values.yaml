@@ -1,0 +1,234 @@
+# Global settings
+global:
+  image:
+    registry: ghcr.io
+    tag: latest
+    pullPolicy: IfNotPresent
+  imagePullSecrets: []
+
+# API Service
+api:
+  name: api
+  replicaCount: 2
+
+  image:
+    repository: easyx/api
+    tag: ""
+
+  service:
+    type: ClusterIP
+    port: 3000
+
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 250m
+      memory: 512Mi
+
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+  env:
+    NODE_ENV: production
+    PORT: "3000"
+
+  secrets:
+    jwtSecret: ""
+    databaseUrl: ""
+    redisUrl: ""
+
+  livenessProbe:
+    httpGet:
+      path: /api/v1/health
+      port: 3000
+    initialDelaySeconds: 30
+    periodSeconds: 10
+
+  readinessProbe:
+    httpGet:
+      path: /api/v1/health
+      port: 3000
+    initialDelaySeconds: 5
+    periodSeconds: 5
+
+# Web Frontend
+web:
+  name: web
+  replicaCount: 2
+
+  image:
+    repository: easyx/web
+    tag: ""
+
+  service:
+    type: ClusterIP
+    port: 3000
+
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+
+  env:
+    NODE_ENV: production
+    PORT: "3000"
+
+# Admin Panel
+admin:
+  name: admin
+  replicaCount: 1
+
+  image:
+    repository: easyx/admin
+    tag: ""
+
+  service:
+    type: ClusterIP
+    port: 3000
+
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+  env:
+    NODE_ENV: production
+    PORT: "3000"
+
+# Ingress Configuration
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+
+  hosts:
+    api:
+      host: api.easyx.io
+      paths:
+        - path: /
+          pathType: Prefix
+    web:
+      host: easyx.io
+      paths:
+        - path: /
+          pathType: Prefix
+    admin:
+      host: admin.easyx.io
+      paths:
+        - path: /
+          pathType: Prefix
+
+  tls:
+    - secretName: easyx-tls
+      hosts:
+        - api.easyx.io
+        - easyx.io
+        - admin.easyx.io
+
+# Blockchain watchers
+blockchain:
+  enabled: false
+  btc:
+    enabled: false
+    host: bitcoin
+    port: 18332
+    username: easyx_btc
+    rpcPassword: ""
+  ltc:
+    enabled: false
+    host: litecoin
+    port: 19332
+    username: easyx_ltc
+    rpcPassword: ""
+  eth:
+    enabled: false
+    rpcUrl: ""
+    mnemonic: ""
+  tron:
+    enabled: false
+    fullNodeUrl: ""
+    apiKey: ""
+
+# PostgreSQL (Bitnami chart)
+postgresql:
+  enabled: true
+  auth:
+    username: easyx
+    password: ""
+    database: easyx
+  primary:
+    persistence:
+      size: 50Gi
+    resources:
+      limits:
+        cpu: 2000m
+        memory: 4Gi
+      requests:
+        cpu: 500m
+        memory: 1Gi
+
+# Redis (Bitnami chart)
+redis:
+  enabled: true
+  architecture: standalone
+  auth:
+    enabled: false
+  master:
+    persistence:
+      size: 5Gi
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 256Mi
+
+# Service Account
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+
+# Pod Security
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+# Network Policy
+networkPolicy:
+  enabled: true
+
+# Pod Disruption Budget
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1

@@ -1,0 +1,133 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "easyx.fullname" . }}-api
+  labels:
+    {{- include "easyx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+spec:
+  {{- if not .Values.api.autoscaling.enabled }}
+  replicas: {{ .Values.api.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "easyx.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: api
+  template:
+    metadata:
+      labels:
+        {{- include "easyx.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: api
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "easyx.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: api
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: {{ include "easyx.image" (dict "root" . "image" .Values.api.image) }}
+          imagePullPolicy: {{ .Values.global.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.api.service.port }}
+              protocol: TCP
+          env:
+            - name: NODE_ENV
+              value: {{ .Values.api.env.NODE_ENV | quote }}
+            - name: PORT
+              value: {{ .Values.api.env.PORT | quote }}
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "easyx.fullname" . }}-secrets
+                  key: database-url
+            - name: REDIS_HOST
+              value: {{ include "easyx.fullname" . }}-redis-master
+            - name: REDIS_PORT
+              value: "6379"
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "easyx.fullname" . }}-secrets
+                  key: jwt-secret
+            {{- if .Values.blockchain.btc.enabled }}
+            - name: BTC_WATCHER_ENABLED
+              value: "true"
+            - name: BTC_RPC_HOST
+              value: {{ .Values.blockchain.btc.host | quote }}
+            - name: BTC_RPC_PORT
+              value: {{ .Values.blockchain.btc.port | quote }}
+            - name: BTC_RPC_USER
+              value: {{ .Values.blockchain.btc.username | quote }}
+            - name: BTC_RPC_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "easyx.fullname" . }}-blockchain-secrets
+                  key: btc-rpc-password
+            {{- end }}
+            {{- if .Values.blockchain.ltc.enabled }}
+            - name: LTC_WATCHER_ENABLED
+              value: "true"
+            - name: LTC_RPC_HOST
+              value: {{ .Values.blockchain.ltc.host | quote }}
+            - name: LTC_RPC_PORT
+              value: {{ .Values.blockchain.ltc.port | quote }}
+            - name: LTC_RPC_USER
+              value: {{ .Values.blockchain.ltc.username | quote }}
+            - name: LTC_RPC_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "easyx.fullname" . }}-blockchain-secrets
+                  key: ltc-rpc-password
+            {{- end }}
+            {{- if .Values.blockchain.eth.enabled }}
+            - name: ETH_WATCHER_ENABLED
+              value: "true"
+            - name: ETH_RPC_URL
+              value: {{ .Values.blockchain.eth.rpcUrl | quote }}
+            - name: ETH_MNEMONIC
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "easyx.fullname" . }}-blockchain-secrets
+                  key: eth-mnemonic
+            {{- end }}
+            {{- if .Values.blockchain.tron.enabled }}
+            - name: TRON_WATCHER_ENABLED
+              value: "true"
+            - name: TRON_FULL_NODE_URL
+              value: {{ .Values.blockchain.tron.fullNodeUrl | quote }}
+            - name: TRON_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "easyx.fullname" . }}-blockchain-secrets
+                  key: tron-api-key
+            {{- end }}
+          livenessProbe:
+            {{- toYaml .Values.api.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.api.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.api.resources | nindent 12 }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

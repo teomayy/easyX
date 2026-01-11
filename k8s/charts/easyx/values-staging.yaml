@@ -1,0 +1,159 @@
+# Staging Environment Values
+
+global:
+  image:
+    registry: ghcr.io
+    pullPolicy: Always
+
+# API - Lower resources for staging
+api:
+  replicaCount: 1
+
+  image:
+    repository: easyx/api
+
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+  autoscaling:
+    enabled: false
+
+  env:
+    NODE_ENV: staging
+    PORT: "3000"
+
+# Web - Single replica for staging
+web:
+  replicaCount: 1
+
+  image:
+    repository: easyx/web
+
+  resources:
+    limits:
+      cpu: 250m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 128Mi
+
+  autoscaling:
+    enabled: false
+
+  env:
+    NODE_ENV: staging
+
+# Admin - Single replica
+admin:
+  replicaCount: 1
+
+  image:
+    repository: easyx/admin
+
+  resources:
+    limits:
+      cpu: 250m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 128Mi
+
+  env:
+    NODE_ENV: staging
+
+# Ingress - Staging domains
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-staging
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+
+  hosts:
+    api:
+      host: api.staging.easyx.io
+      paths:
+        - path: /
+          pathType: Prefix
+    web:
+      host: staging.easyx.io
+      paths:
+        - path: /
+          pathType: Prefix
+    admin:
+      host: admin.staging.easyx.io
+      paths:
+        - path: /
+          pathType: Prefix
+
+  tls:
+    - secretName: easyx-staging-tls
+      hosts:
+        - api.staging.easyx.io
+        - staging.easyx.io
+        - admin.staging.easyx.io
+
+# Blockchain - Testnets only
+blockchain:
+  enabled: true
+  btc:
+    enabled: true
+    host: bitcoin-testnet
+    port: 18332
+    username: easyx_btc
+  ltc:
+    enabled: true
+    host: litecoin-testnet
+    port: 19332
+    username: easyx_ltc
+  eth:
+    enabled: true
+    rpcUrl: https://sepolia.infura.io/v3/YOUR_PROJECT_ID
+  tron:
+    enabled: true
+    fullNodeUrl: https://nile.trongrid.io
+
+# PostgreSQL - Smaller for staging
+postgresql:
+  enabled: true
+  auth:
+    username: easyx
+    database: easyx_staging
+  primary:
+    persistence:
+      size: 10Gi
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1Gi
+      requests:
+        cpu: 100m
+        memory: 256Mi
+
+# Redis - Smaller for staging
+redis:
+  enabled: true
+  architecture: standalone
+  master:
+    persistence:
+      size: 1Gi
+    resources:
+      limits:
+        cpu: 200m
+        memory: 256Mi
+      requests:
+        cpu: 50m
+        memory: 128Mi
+
+# Disable PDB for staging
+podDisruptionBudget:
+  enabled: false
+
+# Network policy enabled but more permissive
+networkPolicy:
+  enabled: true

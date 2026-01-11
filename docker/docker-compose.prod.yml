@@ -1,0 +1,106 @@
+version: '3.8'
+
+services:
+  # API Application
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.api
+    container_name: easyx-api
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://easyx:${DB_PASSWORD}@postgres:5432/easyx
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Web Application
+  web:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.web
+    container_name: easyx-web
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: http://api:3000
+    ports:
+      - "3001:3000"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  # Admin Panel
+  admin:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.admin
+    container_name: easyx-admin
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: http://api:3000
+    ports:
+      - "3002:3000"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: easyx-postgres-prod
+    environment:
+      POSTGRES_USER: easyx
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: easyx
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U easyx"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: easyx-redis-prod
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: easyx-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - api
+      - web
+      - admin
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  default:
+    name: easyx-network-prod

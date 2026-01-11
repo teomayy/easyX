@@ -1,0 +1,230 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: easyx-postgres
+    environment:
+      POSTGRES_USER: easyx
+      POSTGRES_PASSWORD: easyx_dev_password
+      POSTGRES_DB: easyx
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U easyx"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: easyx-redis
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # pgAdmin (optional - for database management)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: easyx-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@easyx.local
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    profiles:
+      - tools
+
+  # Redis Commander (optional - for Redis management)
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: easyx-redis-commander
+    environment:
+      REDIS_HOSTS: local:redis:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+    profiles:
+      - tools
+
+  # API Backend
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.api
+    container_name: easyx-api
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DATABASE_URL: postgresql://easyx:easyx_dev_password@postgres:5432/easyx
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: dev-jwt-secret-change-in-production
+      JWT_ACCESS_EXPIRES_IN: 15m
+      JWT_REFRESH_EXPIRES_IN: 7d
+    ports:
+      - "3005:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    profiles:
+      - app
+
+  # Web Frontend
+  web:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.web
+    container_name: easyx-web
+    environment:
+      NEXT_PUBLIC_API_URL: http://api:3000
+    ports:
+      - "3001:3000"
+    depends_on:
+      - api
+    profiles:
+      - app
+
+  # Admin Panel
+  admin:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.admin
+    container_name: easyx-admin
+    environment:
+      NEXT_PUBLIC_API_URL: http://api:3000
+    ports:
+      - "3002:3000"
+    depends_on:
+      - api
+    profiles:
+      - app
+
+  # ===================
+  # BLOCKCHAIN NODES
+  # ===================
+
+  # Bitcoin Core (Testnet)
+  bitcoin:
+    image: ruimarinho/bitcoin-core:24
+    container_name: easyx-bitcoin
+    command:
+      -testnet
+      -server
+      -rpcuser=easyx_btc
+      -rpcpassword=btc_rpc_password_change_me
+      -rpcallowip=0.0.0.0/0
+      -rpcbind=0.0.0.0
+      -zmqpubrawblock=tcp://0.0.0.0:28332
+      -zmqpubrawtx=tcp://0.0.0.0:28333
+      -txindex=1
+      -printtoconsole
+    ports:
+      - "18332:18332"  # RPC testnet
+      - "18333:18333"  # P2P testnet
+      - "28332:28332"  # ZMQ block
+      - "28333:28333"  # ZMQ tx
+    volumes:
+      - bitcoin_data:/home/bitcoin/.bitcoin
+      - ./nodes/bitcoin/bitcoin.conf:/home/bitcoin/.bitcoin/bitcoin.conf:ro
+    profiles:
+      - nodes
+
+  # Litecoin Core (Testnet)
+  litecoin:
+    image: uphold/litecoin-core:0.21
+    container_name: easyx-litecoin
+    command:
+      -testnet
+      -server
+      -rpcuser=easyx_ltc
+      -rpcpassword=ltc_rpc_password_change_me
+      -rpcallowip=0.0.0.0/0
+      -rpcbind=0.0.0.0
+      -zmqpubrawblock=tcp://0.0.0.0:29332
+      -zmqpubrawtx=tcp://0.0.0.0:29333
+      -txindex=1
+      -printtoconsole
+    ports:
+      - "19332:19332"  # RPC testnet
+      - "19333:19333"  # P2P testnet
+      - "29332:29332"  # ZMQ block
+      - "29333:29333"  # ZMQ tx
+    volumes:
+      - litecoin_data:/home/litecoin/.litecoin
+      - ./nodes/litecoin/litecoin.conf:/home/litecoin/.litecoin/litecoin.conf:ro
+    profiles:
+      - nodes
+
+  # Ethereum Geth (Sepolia Testnet)
+  ethereum:
+    image: ethereum/client-go:stable
+    container_name: easyx-ethereum
+    command:
+      - --sepolia
+      - --http
+      - --http.addr=0.0.0.0
+      - --http.port=8545
+      - --http.api=eth,net,web3,txpool,personal
+      - --http.corsdomain=*
+      - --http.vhosts=*
+      - --ws
+      - --ws.addr=0.0.0.0
+      - --ws.port=8546
+      - --ws.api=eth,net,web3,txpool
+      - --ws.origins=*
+      - --syncmode=snap
+      - --maxpeers=50
+    ports:
+      - "8545:8545"   # HTTP RPC
+      - "8546:8546"   # WebSocket
+      - "30303:30303" # P2P
+    volumes:
+      - ethereum_data:/root/.ethereum
+    profiles:
+      - nodes
+
+  # Tron Full Node (Nile Testnet)
+  tron:
+    image: tronprotocol/java-tron:latest
+    container_name: easyx-tron
+    command: ["-c", "/tron/config.conf", "--witness"]
+    ports:
+      - "8090:8090"   # HTTP API
+      - "8091:8091"   # Solidity HTTP
+      - "50051:50051" # gRPC
+      - "50061:50061" # Solidity gRPC
+    volumes:
+      - tron_data:/tron/output-directory
+      - ./nodes/tron/config.conf:/tron/config.conf:ro
+    environment:
+      - JVM_OPTS=-Xms4g -Xmx8g
+    profiles:
+      - nodes
+
+volumes:
+  postgres_data:
+  redis_data:
+  bitcoin_data:
+  litecoin_data:
+  ethereum_data:
+  tron_data:
+
+networks:
+  default:
+    name: easyx-network

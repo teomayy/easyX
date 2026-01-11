@@ -1,0 +1,225 @@
+# Production Environment Values
+
+global:
+  image:
+    registry: ghcr.io
+    pullPolicy: IfNotPresent
+  imagePullSecrets:
+    - name: ghcr-secret
+
+# API - High availability
+api:
+  replicaCount: 3
+
+  image:
+    repository: easyx/api
+
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+    requests:
+      cpu: 500m
+      memory: 1Gi
+
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 20
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+  env:
+    NODE_ENV: production
+    PORT: "3000"
+
+# Web - High availability
+web:
+  replicaCount: 3
+
+  image:
+    repository: easyx/web
+
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 250m
+      memory: 512Mi
+
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+
+  env:
+    NODE_ENV: production
+
+# Admin - Lower replicas (internal use)
+admin:
+  replicaCount: 2
+
+  image:
+    repository: easyx/admin
+
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+  env:
+    NODE_ENV: production
+
+# Ingress - Production domains with rate limiting
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+
+  hosts:
+    api:
+      host: api.easyx.io
+      paths:
+        - path: /
+          pathType: Prefix
+    web:
+      host: easyx.io
+      paths:
+        - path: /
+          pathType: Prefix
+    admin:
+      host: admin.easyx.io
+      paths:
+        - path: /
+          pathType: Prefix
+
+  tls:
+    - secretName: easyx-production-tls
+      hosts:
+        - api.easyx.io
+        - easyx.io
+        - admin.easyx.io
+
+# Blockchain - Mainnet (use external managed nodes or APIs)
+blockchain:
+  enabled: true
+  btc:
+    enabled: true
+    host: bitcoin-mainnet.internal
+    port: 8332
+    username: easyx_btc
+  ltc:
+    enabled: true
+    host: litecoin-mainnet.internal
+    port: 9332
+    username: easyx_ltc
+  eth:
+    enabled: true
+    rpcUrl: https://mainnet.infura.io/v3/YOUR_PROJECT_ID
+  tron:
+    enabled: true
+    fullNodeUrl: https://api.trongrid.io
+
+# PostgreSQL - Production grade
+postgresql:
+  enabled: true
+  auth:
+    username: easyx
+    database: easyx_production
+  primary:
+    persistence:
+      size: 100Gi
+      storageClass: fast-ssd
+    resources:
+      limits:
+        cpu: 4000m
+        memory: 8Gi
+      requests:
+        cpu: 1000m
+        memory: 4Gi
+  readReplicas:
+    replicaCount: 2
+    persistence:
+      size: 100Gi
+      storageClass: fast-ssd
+    resources:
+      limits:
+        cpu: 2000m
+        memory: 4Gi
+      requests:
+        cpu: 500m
+        memory: 2Gi
+
+# Redis - Production with replication
+redis:
+  enabled: true
+  architecture: replication
+  auth:
+    enabled: true
+  master:
+    persistence:
+      size: 10Gi
+      storageClass: fast-ssd
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+      requests:
+        cpu: 250m
+        memory: 512Mi
+  replica:
+    replicaCount: 2
+    persistence:
+      size: 10Gi
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 256Mi
+
+# PDB enabled for high availability
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 2
+
+# Strict network policy
+networkPolicy:
+  enabled: true
+
+# Pod security
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+# Node affinity for spreading across zones
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: easyx
+          topologyKey: topology.kubernetes.io/zone
