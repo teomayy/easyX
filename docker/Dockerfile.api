@@ -22,10 +22,12 @@ COPY packages/database ./packages/database
 COPY packages/shared ./packages/shared
 COPY apps/api ./apps/api
 
-# Generate Prisma client
-RUN pnpm --filter @easyx/database db:generate
+# Generate Prisma client and build database package
+RUN pnpm --filter @easyx/database generate
+RUN pnpm --filter @easyx/database build
+RUN pnpm --filter @easyx/shared build
 
-# Build
+# Build API
 RUN pnpm --filter @easyx/api build
 
 # Production stage
