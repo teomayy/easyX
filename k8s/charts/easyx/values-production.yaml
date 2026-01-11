@@ -88,17 +88,17 @@ ingress:
 
   hosts:
     api:
-      host: api.easyx.io
+      host: api.easyx.uz
       paths:
         - path: /
           pathType: Prefix
     web:
-      host: easyx.io
+      host: easyx.uz
       paths:
         - path: /
           pathType: Prefix
     admin:
-      host: admin.easyx.io
+      host: admin.easyx.uz
       paths:
         - path: /
           pathType: Prefix
@@ -106,9 +106,9 @@ ingress:
   tls:
     - secretName: easyx-production-tls
       hosts:
-        - api.easyx.io
-        - easyx.io
-        - admin.easyx.io
+        - api.easyx.uz
+        - easyx.uz
+        - admin.easyx.uz
 
 # Blockchain - Mainnet (use external managed nodes or APIs)
 blockchain:

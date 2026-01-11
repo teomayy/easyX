@@ -93,7 +93,7 @@ jobs:
         if: success()
         run: |
           echo "Production deployment successful!"
-          echo "API: https://api.easyx.io"
-          echo "Web: https://easyx.io"
-          echo "Admin: https://admin.easyx.io"
+          echo "API: https://api.easyx.uz"
+          echo "Web: https://easyx.uz"
+          echo "Admin: https://admin.easyx.uz"
           echo "Image tag: ${{ steps.image-tag.outputs.tag }}"

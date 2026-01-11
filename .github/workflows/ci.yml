@@ -169,4 +169,4 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-            NEXT_PUBLIC_API_URL=${{ github.ref == 'refs/heads/main' && 'https://api.easyx.io' || 'https://api.staging.easyx.io' }}
+            NEXT_PUBLIC_API_URL=${{ github.ref == 'refs/heads/main' && 'https://api.easyx.uz' || 'https://api.staging.easyx.uz' }}

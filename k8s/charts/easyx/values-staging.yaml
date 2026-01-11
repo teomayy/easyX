@@ -71,22 +71,22 @@ ingress:
   enabled: true
   className: nginx
   annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-staging
+    cert-manager.io/cluster-issuer: letsencrypt-prod
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
 
   hosts:
     api:
-      host: api.staging.easyx.io
+      host: api.staging.easyx.uz
       paths:
         - path: /
           pathType: Prefix
     web:
-      host: staging.easyx.io
+      host: staging.easyx.uz
       paths:
         - path: /
           pathType: Prefix
     admin:
-      host: admin.staging.easyx.io
+      host: admin.staging.easyx.uz
       paths:
         - path: /
           pathType: Prefix
@@ -94,9 +94,9 @@ ingress:
   tls:
     - secretName: easyx-staging-tls
       hosts:
-        - api.staging.easyx.io
-        - staging.easyx.io
-        - admin.staging.easyx.io
+        - api.staging.easyx.uz
+        - staging.easyx.uz
+        - admin.staging.easyx.uz
 
 # Blockchain - Testnets only
 blockchain:

@@ -69,6 +69,6 @@ jobs:
         if: success()
         run: |
           echo "Staging deployment successful!"
-          echo "API: https://api.staging.easyx.io"
-          echo "Web: https://staging.easyx.io"
-          echo "Admin: https://admin.staging.easyx.io"
+          echo "API: https://api.staging.easyx.uz"
+          echo "Web: https://staging.easyx.uz"
+          echo "Admin: https://admin.staging.easyx.uz"
