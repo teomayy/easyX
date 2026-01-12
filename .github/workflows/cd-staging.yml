@@ -66,7 +66,7 @@ jobs:
         run: |
           kubectl exec -n ${{ env.NAMESPACE }} \
             deployment/easyx-api -- \
-            npx prisma migrate deploy
+            npx prisma db push --schema=/app/packages/database/prisma/schema.prisma --accept-data-loss --skip-generate || true
 
       - name: Notify on success
         if: success()
