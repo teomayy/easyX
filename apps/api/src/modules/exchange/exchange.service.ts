@@ -1,5 +1,5 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
-import { PrismaService, Currency } from '@easyx/database';
+import { PrismaService } from '@easyx/database';
 import { Decimal } from '@easyx/database';
 import { LedgerService } from '../ledger/ledger.service';
 import { BalanceService } from '../ledger/balance.service';

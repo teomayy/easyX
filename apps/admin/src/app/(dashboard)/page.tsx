@@ -92,7 +92,7 @@ export default function DashboardPage() {
                 {stats.pendingWithdrawals} заявок на вывод ожидают обработки
               </p>
               <p className="text-sm text-muted-foreground">
-                Перейдите в раздел "Выводы" для обработки
+                Перейдите в раздел &quot;Выводы&quot; для обработки
               </p>
             </div>
           </CardContent>

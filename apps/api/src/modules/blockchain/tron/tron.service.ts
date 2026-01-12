@@ -6,8 +6,8 @@ import axios, { AxiosInstance } from 'axios';
 // USDT TRC20 Contract Address (Mainnet)
 const USDT_TRC20_CONTRACT = 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t';
 
-// TRC20 ABI for USDT
-const TRC20_ABI = {
+// TRC20 ABI for USDT (reserved for future use)
+const _TRC20_ABI = {
   transfer: {
     type: 'Function',
     name: 'transfer',
@@ -84,7 +84,7 @@ export class TronService implements OnModuleInit {
     try {
       // Generate new TRON address
       const response = await this.httpClient.post('/wallet/generateaddress');
-      const { address, hexAddress, privateKey } = response.data;
+      const { address, hexAddress: _hexAddress, privateKey: _privateKey } = response.data;
 
       // Store address (NOTE: In production, private keys should be stored securely!)
       await this.prisma.walletAddress.create({

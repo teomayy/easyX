@@ -136,7 +136,7 @@ export class WithdrawalService {
     });
   }
 
-  async rejectWithdrawal(withdrawalId: string, reason: string) {
+  async rejectWithdrawal(withdrawalId: string, _reason: string) {
     const withdrawal = await this.prisma.withdrawal.findUnique({
       where: { id: withdrawalId },
     });

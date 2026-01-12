@@ -1,10 +1,9 @@
 import { PrismaClient, Prisma } from '@prisma/client';
+import { Decimal } from '@prisma/client/runtime/library';
 import { Module, Global, OnModuleDestroy, Injectable } from '@nestjs/common';
 
 export * from '@prisma/client';
-export { Prisma };
-export type Decimal = Prisma.Decimal;
-export const Decimal = Prisma.Decimal;
+export { Prisma, Decimal };
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleDestroy {
@@ -28,9 +27,9 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy {
     >`SELECT tablename FROM pg_tables WHERE schemaname='public'`;
 
     const tables = tablenames
-      .map(({ tablename }) => tablename)
-      .filter((name) => name !== '_prisma_migrations')
-      .map((name) => `"public"."${name}"`)
+      .map(({ tablename }: { tablename: string }) => tablename)
+      .filter((name: string) => name !== '_prisma_migrations')
+      .map((name: string) => `"public"."${name}"`)
       .join(', ');
 
     if (tables.length > 0) {
