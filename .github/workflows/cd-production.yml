@@ -53,6 +53,9 @@ jobs:
             echo "tag=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
           fi
 
+      - name: Build Helm dependencies
+        run: helm dependency build ./k8s/charts/easyx
+
       - name: Deploy with Helm
         run: |
           helm upgrade --install easyx ./k8s/charts/easyx \
