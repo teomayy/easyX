@@ -102,18 +102,20 @@ ingress:
 blockchain:
   enabled: true
   btc:
-    enabled: false  # Requires own Bitcoin node
-    host: ""
+    enabled: true
+    host: bitcoin-node
     port: 8332
-    username: ""
+    username: easyx_btc
+    password: btc_secure_password_2024
   ltc:
-    enabled: false  # Requires own Litecoin node
-    host: ""
+    enabled: true
+    host: litecoin-node
     port: 9332
-    username: ""
+    username: easyx_ltc
+    password: ltc_secure_password_2024
   eth:
     enabled: true
-    rpcUrl: https://eth.llamarpc.com  # Public mainnet RPC
+    rpcUrl: https://eth.llamarpc.com
   tron:
     enabled: true
     fullNodeUrl: https://api.trongrid.io
