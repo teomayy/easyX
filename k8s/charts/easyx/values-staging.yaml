@@ -98,25 +98,25 @@ ingress:
         - staging.easyx.uz
         - admin.staging.easyx.uz
 
-# Blockchain - Testnets only
+# Blockchain - Mainnet
 blockchain:
   enabled: true
   btc:
-    enabled: true
-    host: bitcoin-testnet
-    port: 18332
-    username: easyx_btc
+    enabled: false  # Requires own Bitcoin node
+    host: ""
+    port: 8332
+    username: ""
   ltc:
-    enabled: true
-    host: litecoin-testnet
-    port: 19332
-    username: easyx_ltc
+    enabled: false  # Requires own Litecoin node
+    host: ""
+    port: 9332
+    username: ""
   eth:
     enabled: true
-    rpcUrl: https://sepolia.infura.io/v3/YOUR_PROJECT_ID
+    rpcUrl: https://eth.llamarpc.com  # Public mainnet RPC
   tron:
     enabled: true
-    fullNodeUrl: https://nile.trongrid.io
+    fullNodeUrl: https://api.trongrid.io
 
 # PostgreSQL - Smaller for staging
 postgresql:
