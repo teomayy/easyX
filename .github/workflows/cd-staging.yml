@@ -1,7 +1,10 @@
 name: Deploy to Staging
 
 on:
-  push:
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
     branches: [staging]
   workflow_dispatch:
 
@@ -16,9 +19,13 @@ jobs:
     name: Deploy to Staging
     runs-on: ubuntu-latest
     environment: staging
+    # Only deploy if CI succeeded (or manual trigger)
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - name: Set up kubectl
         uses: azure/setup-kubectl@v3
@@ -37,7 +44,19 @@ jobs:
 
       - name: Get image tag
         id: image-tag
-        run: echo "tag=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+        run: |
+          SHA="${{ github.event.workflow_run.head_sha || github.sha }}"
+          echo "tag=${SHA::7}" >> $GITHUB_OUTPUT
+
+      - name: Create image pull secret
+        run: |
+          kubectl create namespace ${{ env.NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
+          kubectl create secret docker-registry ghcr-secret \
+            --docker-server=${{ env.REGISTRY }} \
+            --docker-username=${{ github.actor }} \
+            --docker-password=${{ secrets.GITHUB_TOKEN }} \
+            --namespace=${{ env.NAMESPACE }} \
+            --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Build Helm dependencies
         run: helm dependency build ./k8s/charts/easyx
@@ -50,6 +69,7 @@ jobs:
             --values ./k8s/charts/easyx/values-staging.yaml \
             --set global.image.tag=${{ steps.image-tag.outputs.tag }} \
             --set global.image.registry=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }} \
+            --set global.imagePullSecrets[0].name=ghcr-secret \
             --set api.secrets.jwtSecret=${{ secrets.JWT_SECRET }} \
             --set api.secrets.databaseUrl=${{ secrets.DATABASE_URL }} \
             --set api.secrets.redisUrl=${{ secrets.REDIS_URL }} \
