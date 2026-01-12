@@ -110,22 +110,24 @@ ingress:
         - easyx.uz
         - admin.easyx.uz
 
-# Blockchain - Mainnet (use external managed nodes or APIs)
+# Blockchain - Mainnet
 blockchain:
   enabled: true
   btc:
     enabled: true
-    host: bitcoin-mainnet.internal
+    host: bitcoin-node
     port: 8332
     username: easyx_btc
+    password: btc_secure_password_2024
   ltc:
     enabled: true
-    host: litecoin-mainnet.internal
+    host: litecoin-node
     port: 9332
     username: easyx_ltc
+    password: ltc_secure_password_2024
   eth:
     enabled: true
-    rpcUrl: https://mainnet.infura.io/v3/YOUR_PROJECT_ID
+    rpcUrl: https://eth.llamarpc.com
   tron:
     enabled: true
     fullNodeUrl: https://api.trongrid.io
