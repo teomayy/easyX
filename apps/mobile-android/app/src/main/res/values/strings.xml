@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">EasyX</string>
+
+    <!-- Common -->
+    <string name="continue_btn">Davom etish</string>
+    <string name="cancel">Bekor qilish</string>
+    <string name="save">Saqlash</string>
+    <string name="close">Yopish</string>
+    <string name="back">Orqaga</string>
+    <string name="done">Tayyor</string>
+    <string name="loading">Yuklanmoqda...</string>
+    <string name="error">Xatolik</string>
+    <string name="retry">Qaytadan urinish</string>
+
+    <!-- Auth -->
+    <string name="login_title">Davom etish uchun telefon raqamingizni kiriting</string>
+    <string name="phone_label">Telefon raqami</string>
+    <string name="phone_placeholder">Telefon raqami</string>
+    <string name="terms_agreement">Davom etish tugmasini bosish orqali Xizmat ko\'rsatish haqidagi oferta shartlariga rozilik bildirasiz</string>
+    <string name="need_help">Yordam kerakmi?</string>
+    <string name="enter_pin">PIN-kodni kiriting</string>
+    <string name="create_pin">PIN-kod yarating</string>
+    <string name="confirm_pin">PIN-kodni tasdiqlang</string>
+    <string name="pin_mismatch">PIN-kodlar mos kelmadi</string>
+    <string name="logout">Chiqish</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_title_1">Istalgan paytda soting va sotib oling!</string>
+    <string name="onboarding_desc_1">Kriptovalyutalarni tez va oson almashiring</string>
+    <string name="onboarding_title_2">Xavfsiz tranzaksiyalar</string>
+    <string name="onboarding_desc_2">Barcha operatsiyalar shifrlangan va himoyalangan</string>
+    <string name="onboarding_title_3">Qulay interfeys</string>
+    <string name="onboarding_desc_3">Oddiy va tushunarli dizayn bilan ishlang</string>
+    <string name="get_started">Boshlash</string>
+
+    <!-- Home -->
+    <string name="total_balance">Umumiy balans</string>
+    <string name="market">Bozor</string>
+    <string name="send">Yuborish</string>
+    <string name="receive">Qabul qilish</string>
+    <string name="history">Tarix</string>
+    <string name="saved">Saqlangan</string>
+    <string name="all">Barchasi</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Asosiy</string>
+    <string name="nav_trade">Savdo</string>
+    <string name="nav_market">Bozor</string>
+    <string name="nav_transfer">O\'tkazma</string>
+    <string name="nav_history">Tarix</string>
+
+    <!-- Profile -->
+    <string name="profile">Profil</string>
+    <string name="personal_profile">Shaxsiy profil</string>
+    <string name="personal">Shaxsiy</string>
+    <string name="personal_info">Shaxsiy ma\'lumotlar</string>
+    <string name="cards">Kartalar</string>
+    <string name="crypto_addresses">Kripto manzillar</string>
+    <string name="settings">Sozlamalar</string>
+    <string name="app_language">Ilova tili</string>
+    <string name="notifications">Bildirishnomalar</string>
+    <string name="security">Xavfsizlik</string>
+    <string name="other">Boshqa</string>
+    <string name="privacy_policy">Maxfiylik siyosati</string>
+    <string name="terms_of_service">Foydalanish shartlari</string>
+    <string name="about_app">Ilova haqida</string>
+    <string name="sign_out">Profildan chiqish</string>
+    <string name="version">Talqin</string>
+</resources>

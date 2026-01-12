@@ -10,7 +10,7 @@ api:
   replicaCount: 1
 
   image:
-    repository: easyx/api
+    repository: api
 
   resources:
     limits:
@@ -32,7 +32,7 @@ web:
   replicaCount: 1
 
   image:
-    repository: easyx/web
+    repository: web
 
   resources:
     limits:
@@ -53,7 +53,7 @@ admin:
   replicaCount: 1
 
   image:
-    repository: easyx/admin
+    repository: admin
 
   resources:
     limits:

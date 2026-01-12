@@ -55,3 +55,6 @@ docker/nodes/data
 # Misc
 *.tgz
 .cache
+# Android
+apps/mobile-android/.gradle/
+apps/mobile-android/local.properties

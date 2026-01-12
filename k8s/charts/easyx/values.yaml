@@ -12,7 +12,7 @@ api:
   replicaCount: 2
 
   image:
-    repository: easyx/api
+    repository: api
     tag: ""
 
   service:
@@ -63,7 +63,7 @@ web:
   replicaCount: 2
 
   image:
-    repository: easyx/web
+    repository: web
     tag: ""
 
   service:
@@ -94,7 +94,7 @@ admin:
   replicaCount: 1
 
   image:
-    repository: easyx/admin
+    repository: admin
     tag: ""
 
   service:
