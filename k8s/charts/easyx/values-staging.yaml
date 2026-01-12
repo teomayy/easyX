@@ -121,6 +121,8 @@ blockchain:
 # PostgreSQL - Smaller for staging
 postgresql:
   enabled: true
+  image:
+    tag: latest
   auth:
     username: easyx
     database: easyx_staging
@@ -138,6 +140,8 @@ postgresql:
 # Redis - Smaller for staging
 redis:
   enabled: true
+  image:
+    tag: latest
   architecture: standalone
   master:
     persistence:
