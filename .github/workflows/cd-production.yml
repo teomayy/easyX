@@ -25,7 +25,7 @@ env:
 jobs:
   deploy:
     name: Deploy to Production
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     environment: production
     # Only deploy if CI succeeded (or manual/tag trigger)
     if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'push' || github.event.workflow_run.conclusion == 'success' }}
