@@ -61,6 +61,7 @@ export const useAdminAuthStore = create<AdminAuthState>()(
       partialize: (state) => ({
         accessToken: state.accessToken,
         admin: state.admin,
+        isAuthenticated: state.isAuthenticated,
       }),
     }
   )

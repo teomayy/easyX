@@ -46,9 +46,10 @@ export default function DashboardLayout({
     router.push('/login');
   };
 
-  if (!isAuthenticated && typeof window !== 'undefined') {
+  // Check if we have a token (zustand persist loads async, so isAuthenticated may be false initially)
+  if (typeof window !== 'undefined') {
     const accessToken = localStorage.getItem('adminAccessToken');
-    if (!accessToken) {
+    if (!accessToken && !isAuthenticated) {
       return null;
     }
   }
