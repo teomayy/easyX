@@ -26,6 +26,7 @@ api:
   env:
     NODE_ENV: staging
     PORT: "3000"
+    CORS_ORIGINS: "https://staging.easyx.uz,https://admin.staging.easyx.uz"
 
 # Web - Single replica for staging
 web:

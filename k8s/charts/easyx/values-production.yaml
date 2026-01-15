@@ -32,6 +32,7 @@ api:
   env:
     NODE_ENV: production
     PORT: "3000"
+    CORS_ORIGINS: "https://easyx.uz,https://admin.easyx.uz"
 
 # Web - High availability
 web:
