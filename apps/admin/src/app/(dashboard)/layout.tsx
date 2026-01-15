@@ -12,6 +12,7 @@ import {
   FileText,
   Settings,
   LogOut,
+  Loader2,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -32,26 +33,32 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { isAuthenticated, logout, admin } = useAdminAuthStore();
+  const { isAuthenticated, logout, admin, _hasHydrated } = useAdminAuthStore();
 
   useEffect(() => {
-    const accessToken = localStorage.getItem('adminAccessToken');
-    if (!accessToken) {
+    // Only check auth after hydration is complete
+    if (_hasHydrated && !isAuthenticated) {
       router.push('/login');
     }
-  }, [router]);
+  }, [_hasHydrated, isAuthenticated, router]);
 
   const handleLogout = () => {
     logout();
     router.push('/login');
   };
 
-  // Check if we have a token (zustand persist loads async, so isAuthenticated may be false initially)
-  if (typeof window !== 'undefined') {
-    const accessToken = localStorage.getItem('adminAccessToken');
-    if (!accessToken && !isAuthenticated) {
-      return null;
-    }
+  // Show loading while hydrating
+  if (!_hasHydrated) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  // After hydration, check if authenticated
+  if (!isAuthenticated) {
+    return null;
   }
 
   return (

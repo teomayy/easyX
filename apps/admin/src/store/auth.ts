@@ -14,9 +14,11 @@ interface AdminAuthState {
   accessToken: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  _hasHydrated: boolean;
 
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  setHasHydrated: (state: boolean) => void;
 }
 
 export const useAdminAuthStore = create<AdminAuthState>()(
@@ -26,6 +28,7 @@ export const useAdminAuthStore = create<AdminAuthState>()(
       accessToken: null,
       isLoading: false,
       isAuthenticated: false,
+      _hasHydrated: false,
 
       login: async (email: string, password: string) => {
         set({ isLoading: true });
@@ -55,6 +58,10 @@ export const useAdminAuthStore = create<AdminAuthState>()(
           isAuthenticated: false,
         });
       },
+
+      setHasHydrated: (state: boolean) => {
+        set({ _hasHydrated: state });
+      },
     }),
     {
       name: 'admin-auth-storage',
@@ -63,6 +70,9 @@ export const useAdminAuthStore = create<AdminAuthState>()(
         admin: state.admin,
         isAuthenticated: state.isAuthenticated,
       }),
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+      },
     }
   )
 );
