@@ -7,63 +7,12 @@ global:
   imagePullSecrets:
     - name: ghcr-secret
 
-# API - High availability
+# API - Single replica for current server
 api:
-  replicaCount: 3
+  replicaCount: 1
 
   image:
     repository: api
-
-  resources:
-    limits:
-      cpu: 2000m
-      memory: 2Gi
-    requests:
-      cpu: 500m
-      memory: 1Gi
-
-  autoscaling:
-    enabled: true
-    minReplicas: 3
-    maxReplicas: 20
-    targetCPUUtilizationPercentage: 70
-    targetMemoryUtilizationPercentage: 80
-
-  env:
-    NODE_ENV: production
-    PORT: "3000"
-    CORS_ORIGINS: "https://easyx.uz,https://admin.easyx.uz"
-
-# Web - High availability
-web:
-  replicaCount: 3
-
-  image:
-    repository: web
-
-  resources:
-    limits:
-      cpu: 1000m
-      memory: 1Gi
-    requests:
-      cpu: 250m
-      memory: 512Mi
-
-  autoscaling:
-    enabled: true
-    minReplicas: 3
-    maxReplicas: 10
-    targetCPUUtilizationPercentage: 70
-
-  env:
-    NODE_ENV: production
-
-# Admin - Lower replicas (internal use)
-admin:
-  replicaCount: 2
-
-  image:
-    repository: admin
 
   resources:
     limits:
@@ -72,6 +21,50 @@ admin:
     requests:
       cpu: 100m
       memory: 256Mi
+
+  autoscaling:
+    enabled: false
+
+  env:
+    NODE_ENV: production
+    PORT: "3000"
+    CORS_ORIGINS: "https://easyx.uz,https://admin.easyx.uz"
+
+# Web - Single replica for current server
+web:
+  replicaCount: 1
+
+  image:
+    repository: web
+
+  resources:
+    limits:
+      cpu: 250m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 128Mi
+
+  autoscaling:
+    enabled: false
+
+  env:
+    NODE_ENV: production
+
+# Admin - Single replica
+admin:
+  replicaCount: 1
+
+  image:
+    repository: admin
+
+  resources:
+    limits:
+      cpu: 250m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 128Mi
 
   env:
     NODE_ENV: production
@@ -111,53 +104,22 @@ ingress:
         - easyx.uz
         - admin.easyx.uz
 
-# Blockchain - Mainnet with pruned nodes
+# Blockchain - Nodes managed separately (not by Helm)
+# BTC/LTC nodes are deployed manually and already running
 blockchain:
-  enabled: true
+  enabled: false
 
   btc:
-    enabled: true
+    enabled: false
     host: bitcoin-node
     port: 8332
     username: easyx_btc
-    # Node deployment
-    image: ruimarinho/bitcoin-core:24
-    testnet: false
-    prune: 550
-    txindex: false
-    dbcache: 1024
-    maxconnections: 50
-    storage: 50Gi
-    storageClass: fast-ssd
-    resources:
-      limits:
-        cpu: "2"
-        memory: 4Gi
-      requests:
-        cpu: 500m
-        memory: 2Gi
 
   ltc:
-    enabled: true
+    enabled: false
     host: litecoin-node
     port: 9332
     username: easyx_ltc
-    # Node deployment
-    image: uphold/litecoin-core:0.21
-    testnet: false
-    prune: 550
-    txindex: false
-    dbcache: 512
-    maxconnections: 50
-    storage: 30Gi
-    storageClass: fast-ssd
-    resources:
-      limits:
-        cpu: "2"
-        memory: 4Gi
-      requests:
-        cpu: 500m
-        memory: 2Gi
 
   eth:
     enabled: true
@@ -167,69 +129,17 @@ blockchain:
     enabled: true
     fullNodeUrl: https://api.trongrid.io
 
-# PostgreSQL - Production grade
+# PostgreSQL - Managed separately (already exists)
 postgresql:
-  enabled: true
-  auth:
-    username: easyx
-    database: easyx_production
-  primary:
-    persistence:
-      size: 100Gi
-      storageClass: fast-ssd
-    resources:
-      limits:
-        cpu: 4000m
-        memory: 8Gi
-      requests:
-        cpu: 1000m
-        memory: 4Gi
-  readReplicas:
-    replicaCount: 2
-    persistence:
-      size: 100Gi
-      storageClass: fast-ssd
-    resources:
-      limits:
-        cpu: 2000m
-        memory: 4Gi
-      requests:
-        cpu: 500m
-        memory: 2Gi
+  enabled: false
 
-# Redis - Production with replication
+# Redis - Standalone for current server
 redis:
-  enabled: true
-  architecture: replication
-  auth:
-    enabled: true
-  master:
-    persistence:
-      size: 10Gi
-      storageClass: fast-ssd
-    resources:
-      limits:
-        cpu: 1000m
-        memory: 1Gi
-      requests:
-        cpu: 250m
-        memory: 512Mi
-  replica:
-    replicaCount: 2
-    persistence:
-      size: 10Gi
-    resources:
-      limits:
-        cpu: 500m
-        memory: 512Mi
-      requests:
-        cpu: 100m
-        memory: 256Mi
+  enabled: false
 
-# PDB enabled for high availability
+# PDB disabled for single replicas
 podDisruptionBudget:
-  enabled: true
-  minAvailable: 2
+  enabled: false
 
 # Strict network policy
 networkPolicy:
