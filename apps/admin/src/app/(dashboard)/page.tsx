@@ -22,16 +22,21 @@ import { adminDashboardApi } from '@/lib/api';
 import { formatAmount } from '@/lib/utils';
 
 interface DashboardStats {
-  totalUsers: number;
-  newUsersToday: number;
-  totalDeposits: string;
-  depositsToday: string;
-  totalWithdrawals: string;
-  withdrawalsToday: string;
-  pendingWithdrawals: number;
-  totalTrades: number;
-  tradesToday: number;
-  totalVolume: string;
+  users: {
+    total: number;
+  };
+  deposits: {
+    count: number;
+    totalAmount: string;
+  };
+  withdrawals: {
+    count: number;
+    totalAmount: string;
+    pending: number;
+  };
+  trades: {
+    count: number;
+  };
 }
 
 export default function DashboardPage() {
@@ -47,16 +52,10 @@ export default function DashboardPage() {
         console.error('Failed to fetch dashboard stats:', error);
         // Set mock data for demo
         setStats({
-          totalUsers: 1234,
-          newUsersToday: 45,
-          totalDeposits: '1234567.89',
-          depositsToday: '45678.90',
-          totalWithdrawals: '987654.32',
-          withdrawalsToday: '23456.78',
-          pendingWithdrawals: 12,
-          totalTrades: 5678,
-          tradesToday: 234,
-          totalVolume: '9876543.21',
+          users: { total: 0 },
+          deposits: { count: 0, totalAmount: '0' },
+          withdrawals: { count: 0, totalAmount: '0', pending: 0 },
+          trades: { count: 0 },
         });
       } finally {
         setIsLoading(false);
@@ -83,13 +82,13 @@ export default function DashboardPage() {
       </div>
 
       {/* Alert for pending withdrawals */}
-      {stats && stats.pendingWithdrawals > 0 && (
+      {stats && stats.withdrawals.pending > 0 && (
         <Card className="border-yellow-500/50 bg-yellow-500/10">
           <CardContent className="flex items-center gap-4 pt-6">
             <AlertTriangle className="h-6 w-6 text-yellow-500" />
             <div>
               <p className="font-medium text-yellow-500">
-                {stats.pendingWithdrawals} заявок на вывод ожидают обработки
+                {stats.withdrawals.pending} заявок на вывод ожидают обработки
               </p>
               <p className="text-sm text-muted-foreground">
                 Перейдите в раздел &quot;Выводы&quot; для обработки
@@ -103,29 +102,29 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatsCard
           title="Пользователи"
-          value={stats?.totalUsers.toLocaleString() || '0'}
-          subtitle={`+${stats?.newUsersToday || 0} сегодня`}
+          value={stats?.users.total.toLocaleString() || '0'}
+          subtitle="Всего зарегистрировано"
           icon={<Users className="h-5 w-5" />}
           trend="up"
         />
         <StatsCard
           title="Депозиты"
-          value={`$${formatAmount(stats?.totalDeposits || '0', 2)}`}
-          subtitle={`$${formatAmount(stats?.depositsToday || '0', 2)} сегодня`}
+          value={`$${formatAmount(stats?.deposits.totalAmount || '0', 2)}`}
+          subtitle={`${stats?.deposits.count || 0} операций`}
           icon={<ArrowDownToLine className="h-5 w-5" />}
           trend="up"
         />
         <StatsCard
           title="Выводы"
-          value={`$${formatAmount(stats?.totalWithdrawals || '0', 2)}`}
-          subtitle={`$${formatAmount(stats?.withdrawalsToday || '0', 2)} сегодня`}
+          value={`$${formatAmount(stats?.withdrawals.totalAmount || '0', 2)}`}
+          subtitle={`${stats?.withdrawals.pending || 0} ожидают`}
           icon={<ArrowUpFromLine className="h-5 w-5" />}
           trend="up"
         />
         <StatsCard
           title="Обмены"
-          value={stats?.totalTrades.toLocaleString() || '0'}
-          subtitle={`${stats?.tradesToday || 0} сегодня`}
+          value={stats?.trades.count.toLocaleString() || '0'}
+          subtitle="Всего операций"
           icon={<RefreshCw className="h-5 w-5" />}
           trend="up"
         />
@@ -142,7 +141,13 @@ export default function DashboardPage() {
         </CardHeader>
         <CardContent>
           <p className="text-4xl font-bold">
-            ${formatAmount(stats?.totalVolume || '0', 2)}
+            ${formatAmount(
+              String(
+                parseFloat(stats?.deposits.totalAmount || '0') +
+                parseFloat(stats?.withdrawals.totalAmount || '0')
+              ),
+              2
+            )}
           </p>
         </CardContent>
       </Card>

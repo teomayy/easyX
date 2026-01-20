@@ -125,6 +125,30 @@ export class AdminService {
     return this.withdrawalService.rejectWithdrawal(withdrawalId, reason);
   }
 
+  async getDeposits(query: { status?: string; limit?: number; offset?: number }) {
+    const { status, limit = 50, offset = 0 } = query;
+
+    const where: Record<string, unknown> = {};
+    if (status) {
+      where.status = status;
+    }
+
+    const [deposits, total] = await Promise.all([
+      this.prisma.deposit.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip: offset,
+        include: {
+          user: { select: { id: true, username: true, phone: true } },
+        },
+      }),
+      this.prisma.deposit.count({ where }),
+    ]);
+
+    return { deposits, total, limit, offset };
+  }
+
   async getLedgerEntries(query: { limit?: number; offset?: number }) {
     const { limit = 100, offset = 0 } = query;
 

@@ -48,6 +48,12 @@ export class AdminController {
     return this.adminService.rejectWithdrawal(id, dto.reason ?? 'Rejected by admin');
   }
 
+  @Get('deposits')
+  @ApiOperation({ summary: 'Get deposits' })
+  async getDeposits(@Query() query: { status?: string; limit?: number; offset?: number }) {
+    return this.adminService.getDeposits(query);
+  }
+
   @Get('ledger')
   @ApiOperation({ summary: 'Get ledger entries' })
   async getLedger(@Query() query: { limit?: number; offset?: number }) {
