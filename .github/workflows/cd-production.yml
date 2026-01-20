@@ -89,6 +89,7 @@ jobs:
             --set api.secrets.jwtSecret=${{ secrets.JWT_SECRET }} \
             --set api.secrets.databaseUrl=${{ secrets.DATABASE_URL }} \
             --set api.secrets.redisUrl=${{ secrets.REDIS_URL }} \
+            --set postgresql.auth.password=${{ secrets.POSTGRESQL_PASSWORD }} \
             --set blockchain.btc.rpcPassword=${{ secrets.BTC_RPC_PASSWORD }} \
             --set blockchain.ltc.rpcPassword=${{ secrets.LTC_RPC_PASSWORD }} \
             --set blockchain.eth.mnemonic=${{ secrets.ETH_MNEMONIC }} \
