@@ -100,4 +100,8 @@ export class LtcService implements OnModuleInit {
   async getBlockchainInfo() {
     return this.rpcClient.getBlockchainInfo();
   }
+
+  async getNetworkInfo() {
+    return this.rpcClient.getNetworkInfo();
+  }
 }

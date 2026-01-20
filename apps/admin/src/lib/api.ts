@@ -98,4 +98,27 @@ export const adminLedgerApi = {
   }) => api.get('/admin/ledger', { params }),
 };
 
+// Admin Wallets API
+export const adminWalletsApi = {
+  getBalances: () => api.get('/admin/wallets/balances'),
+
+  getNodeStatuses: () => api.get('/admin/wallets/nodes'),
+
+  getAddresses: (params?: {
+    currency?: string;
+    userId?: string;
+    limit?: number;
+    offset?: number;
+  }) => api.get('/admin/wallets/addresses', { params }),
+
+  getAddressStats: () => api.get('/admin/wallets/addresses/stats'),
+
+  sendCrypto: (data: {
+    currency: string;
+    network: string;
+    toAddress: string;
+    amount: string;
+  }) => api.post('/admin/wallets/send', data),
+};
+
 export default api;

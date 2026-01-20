@@ -162,6 +162,11 @@ export class BitcoinRpcClient {
     return this.call('estimatesmartfee', [confTarget]);
   }
 
+  // Balance
+  async getBalance(minconf = 1): Promise<number> {
+    return this.call<number>('getbalance', ['*', minconf]);
+  }
+
   // Network info
   async getNetworkInfo(): Promise<{
     version: number;
@@ -177,6 +182,7 @@ export class BitcoinRpcClient {
     headers: number;
     bestblockhash: string;
     verificationprogress: number;
+    initialblockdownload: boolean;
   }> {
     return this.call('getblockchaininfo');
   }

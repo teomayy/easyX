@@ -13,6 +13,7 @@ import {
   Settings,
   LogOut,
   Loader2,
+  Wallet,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,7 @@ import { useAdminAuthStore } from '@/store/auth';
 const navItems = [
   { href: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/users', icon: Users, label: 'Пользователи' },
+  { href: '/wallets', icon: Wallet, label: 'Кошельки' },
   { href: '/withdrawals', icon: ArrowUpFromLine, label: 'Выводы' },
   { href: '/deposits', icon: ArrowDownToLine, label: 'Депозиты' },
   { href: '/ledger', icon: FileText, label: 'Ledger' },
