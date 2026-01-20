@@ -27,11 +27,14 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config;
-
-    if (error.response?.status === 401 && originalRequest) {
+    if (error.response?.status === 401) {
+      // Clear all auth data to prevent redirect loop
       localStorage.removeItem('adminAccessToken');
-      window.location.href = '/login';
+      localStorage.removeItem('admin-auth-storage');
+      // Only redirect if not already on login page
+      if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+        window.location.href = '/login';
+      }
     }
 
     return Promise.reject(error);
