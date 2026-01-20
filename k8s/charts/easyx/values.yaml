@@ -146,25 +146,69 @@ ingress:
         - easyx.io
         - admin.easyx.io
 
-# Blockchain watchers
+# Blockchain configuration
 blockchain:
   enabled: false
+
+  # Bitcoin Node
   btc:
     enabled: false
-    host: bitcoin
-    port: 18332
+    host: bitcoin-node
+    port: 8332
     username: easyx_btc
     rpcPassword: ""
+    # Node deployment settings
+    image: ruimarinho/bitcoin-core:24
+    testnet: false
+    prune: 550  # Prune mode to save disk space (MB)
+    txindex: false  # Disable txindex when pruning
+    dbcache: 512
+    maxconnections: 40
+    storage: 50Gi
+    storageClass: ""
+    resources:
+      limits:
+        cpu: "2"
+        memory: 2Gi
+      requests:
+        cpu: 500m
+        memory: 1Gi
+    nodeSelector: {}
+    tolerations: []
+
+  # Litecoin Node
   ltc:
     enabled: false
-    host: litecoin
-    port: 19332
+    host: litecoin-node
+    port: 9332
     username: easyx_ltc
     rpcPassword: ""
+    # Node deployment settings
+    image: uphold/litecoin-core:0.21
+    testnet: false
+    prune: 550  # Prune mode to save disk space (MB)
+    txindex: false
+    dbcache: 256
+    maxconnections: 40
+    storage: 30Gi
+    storageClass: ""
+    resources:
+      limits:
+        cpu: "1"
+        memory: 2Gi
+      requests:
+        cpu: 250m
+        memory: 1Gi
+    nodeSelector: {}
+    tolerations: []
+
+  # Ethereum (external RPC)
   eth:
     enabled: false
     rpcUrl: ""
     mnemonic: ""
+
+  # Tron (external RPC)
   tron:
     enabled: false
     fullNodeUrl: ""

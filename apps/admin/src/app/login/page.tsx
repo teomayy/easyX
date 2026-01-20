@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -31,8 +31,15 @@ type LoginFormData = z.infer<typeof loginSchema>;
 export default function AdminLoginPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { login, isLoading } = useAdminAuthStore();
+  const { login, isLoading, isAuthenticated, _hasHydrated } = useAdminAuthStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (_hasHydrated && isAuthenticated) {
+      router.replace('/');
+    }
+  }, [_hasHydrated, isAuthenticated, router]);
 
   const {
     register,
@@ -50,7 +57,8 @@ export default function AdminLoginPage() {
         title: 'Успешный вход',
         description: 'Добро пожаловать в админ-панель',
       });
-      router.push('/');
+      // Use replace to avoid back button returning to login
+      router.replace('/');
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : 'Неверный email или пароль';

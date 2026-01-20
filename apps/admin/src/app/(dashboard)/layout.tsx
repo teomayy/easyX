@@ -38,7 +38,7 @@ export default function DashboardLayout({
   useEffect(() => {
     // Only check auth after hydration is complete
     if (_hasHydrated && !isAuthenticated) {
-      router.push('/login');
+      router.replace('/login');
     }
   }, [_hasHydrated, isAuthenticated, router]);
 

@@ -1,0 +1,287 @@
+{{- if .Values.blockchain.enabled }}
+# ===================
+# BITCOIN NODE
+# ===================
+{{- if .Values.blockchain.btc.enabled }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: bitcoin-node-data
+  labels:
+    {{- include "easyx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: bitcoin-node
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.blockchain.btc.storage | default "50Gi" }}
+  {{- if .Values.blockchain.btc.storageClass }}
+  storageClassName: {{ .Values.blockchain.btc.storageClass }}
+  {{- end }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bitcoin-node
+  labels:
+    {{- include "easyx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: bitcoin-node
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: bitcoin-node
+  template:
+    metadata:
+      labels:
+        app: bitcoin-node
+        {{- include "easyx.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: bitcoin-node
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: bitcoin
+          image: {{ .Values.blockchain.btc.image | default "ruimarinho/bitcoin-core:24" }}
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -c
+            - |
+              bitcoind -printtoconsole \
+                {{- if .Values.blockchain.btc.prune }}
+                -prune={{ .Values.blockchain.btc.prune }} \
+                {{- end }}
+                -server=1 \
+                -rpcuser={{ .Values.blockchain.btc.username }} \
+                -rpcpassword="$BTC_RPC_PASSWORD" \
+                -rpcallowip=0.0.0.0/0 \
+                -rpcbind=0.0.0.0 \
+                -rpcport=8332 \
+                {{- if .Values.blockchain.btc.testnet }}
+                -testnet \
+                {{- end }}
+                {{- if .Values.blockchain.btc.txindex }}
+                -txindex=1 \
+                {{- end }}
+                -dbcache={{ .Values.blockchain.btc.dbcache | default 512 }} \
+                -maxconnections={{ .Values.blockchain.btc.maxconnections | default 40 }}
+          env:
+            - name: BTC_RPC_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "easyx.fullname" . }}-blockchain-secrets
+                  key: btc-rpc-password
+          ports:
+            - name: rpc
+              containerPort: 8332
+              protocol: TCP
+            - name: p2p
+              containerPort: {{ if .Values.blockchain.btc.testnet }}18333{{ else }}8333{{ end }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.blockchain.btc.resources | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /home/bitcoin/.bitcoin
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - bitcoin-cli -rpcuser={{ .Values.blockchain.btc.username }} -rpcpassword="$BTC_RPC_PASSWORD" getblockchaininfo
+            initialDelaySeconds: 120
+            periodSeconds: 60
+            timeoutSeconds: 30
+            failureThreshold: 5
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - bitcoin-cli -rpcuser={{ .Values.blockchain.btc.username }} -rpcpassword="$BTC_RPC_PASSWORD" getblockchaininfo
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 15
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: bitcoin-node-data
+      {{- with .Values.blockchain.btc.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.blockchain.btc.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bitcoin-node
+  labels:
+    {{- include "easyx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: bitcoin-node
+spec:
+  type: ClusterIP
+  ports:
+    - name: rpc
+      port: 8332
+      targetPort: rpc
+      protocol: TCP
+  selector:
+    app: bitcoin-node
+{{- end }}
+
+# ===================
+# LITECOIN NODE
+# ===================
+{{- if .Values.blockchain.ltc.enabled }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: litecoin-node-data
+  labels:
+    {{- include "easyx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: litecoin-node
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.blockchain.ltc.storage | default "30Gi" }}
+  {{- if .Values.blockchain.ltc.storageClass }}
+  storageClassName: {{ .Values.blockchain.ltc.storageClass }}
+  {{- end }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: litecoin-node
+  labels:
+    {{- include "easyx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: litecoin-node
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: litecoin-node
+  template:
+    metadata:
+      labels:
+        app: litecoin-node
+        {{- include "easyx.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: litecoin-node
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: litecoin
+          image: {{ .Values.blockchain.ltc.image | default "uphold/litecoin-core:0.21" }}
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -c
+            - |
+              litecoind -printtoconsole \
+                {{- if .Values.blockchain.ltc.prune }}
+                -prune={{ .Values.blockchain.ltc.prune }} \
+                {{- end }}
+                -server=1 \
+                -rpcuser={{ .Values.blockchain.ltc.username }} \
+                -rpcpassword="$LTC_RPC_PASSWORD" \
+                -rpcallowip=0.0.0.0/0 \
+                -rpcbind=0.0.0.0 \
+                -rpcport=9332 \
+                {{- if .Values.blockchain.ltc.testnet }}
+                -testnet \
+                {{- end }}
+                {{- if .Values.blockchain.ltc.txindex }}
+                -txindex=1 \
+                {{- end }}
+                -dbcache={{ .Values.blockchain.ltc.dbcache | default 256 }} \
+                -maxconnections={{ .Values.blockchain.ltc.maxconnections | default 40 }}
+          env:
+            - name: LTC_RPC_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "easyx.fullname" . }}-blockchain-secrets
+                  key: ltc-rpc-password
+          ports:
+            - name: rpc
+              containerPort: 9332
+              protocol: TCP
+            - name: p2p
+              containerPort: {{ if .Values.blockchain.ltc.testnet }}19333{{ else }}9333{{ end }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.blockchain.ltc.resources | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /home/litecoin/.litecoin
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - litecoin-cli -rpcuser={{ .Values.blockchain.ltc.username }} -rpcpassword="$LTC_RPC_PASSWORD" getblockchaininfo
+            initialDelaySeconds: 120
+            periodSeconds: 60
+            timeoutSeconds: 30
+            failureThreshold: 5
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - litecoin-cli -rpcuser={{ .Values.blockchain.ltc.username }} -rpcpassword="$LTC_RPC_PASSWORD" getblockchaininfo
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 15
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: litecoin-node-data
+      {{- with .Values.blockchain.ltc.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.blockchain.ltc.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: litecoin-node
+  labels:
+    {{- include "easyx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: litecoin-node
+spec:
+  type: ClusterIP
+  ports:
+    - name: rpc
+      port: 9332
+      targetPort: rpc
+      protocol: TCP
+  selector:
+    app: litecoin-node
+{{- end }}
+{{- end }}

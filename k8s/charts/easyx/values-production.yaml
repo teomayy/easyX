@@ -111,24 +111,58 @@ ingress:
         - easyx.uz
         - admin.easyx.uz
 
-# Blockchain - Mainnet
+# Blockchain - Mainnet with pruned nodes
 blockchain:
   enabled: true
+
   btc:
     enabled: true
     host: bitcoin-node
     port: 8332
     username: easyx_btc
-    password: btc_secure_password_2024
+    # Node deployment
+    image: ruimarinho/bitcoin-core:24
+    testnet: false
+    prune: 550
+    txindex: false
+    dbcache: 1024
+    maxconnections: 50
+    storage: 50Gi
+    storageClass: fast-ssd
+    resources:
+      limits:
+        cpu: "2"
+        memory: 4Gi
+      requests:
+        cpu: 500m
+        memory: 2Gi
+
   ltc:
     enabled: true
     host: litecoin-node
     port: 9332
     username: easyx_ltc
-    password: ltc_secure_password_2024
+    # Node deployment
+    image: uphold/litecoin-core:0.21
+    testnet: false
+    prune: 550
+    txindex: false
+    dbcache: 512
+    maxconnections: 50
+    storage: 30Gi
+    storageClass: fast-ssd
+    resources:
+      limits:
+        cpu: "2"
+        memory: 4Gi
+      requests:
+        cpu: 500m
+        memory: 2Gi
+
   eth:
     enabled: true
     rpcUrl: https://eth.llamarpc.com
+
   tron:
     enabled: true
     fullNodeUrl: https://api.trongrid.io
