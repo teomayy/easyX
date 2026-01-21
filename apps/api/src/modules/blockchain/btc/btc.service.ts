@@ -24,6 +24,9 @@ export class BtcService implements OnModuleInit {
   }
 
   getRpcClient(): BitcoinRpcClient {
+    if (!this.rpcClient) {
+      throw new Error('BTC RPC client not initialized');
+    }
     return this.rpcClient;
   }
 

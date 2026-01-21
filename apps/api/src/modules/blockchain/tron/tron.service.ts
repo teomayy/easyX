@@ -44,6 +44,8 @@ export class TronService implements OnModuleInit {
   private httpClient: AxiosInstance;
   private apiKey: string;
   private contractAddress: string;
+  private masterAddress: string;
+  private privateKey: string;
 
   constructor(
     private readonly configService: ConfigService,
@@ -53,13 +55,15 @@ export class TronService implements OnModuleInit {
   onModuleInit() {
     const fullNodeUrl = this.configService.get<string>(
       'blockchain.tron.fullNodeUrl',
-      'http://localhost:8090',
+      'https://api.trongrid.io',
     );
     this.apiKey = this.configService.get<string>('blockchain.tron.apiKey', '');
     this.contractAddress = this.configService.get<string>(
       'blockchain.tron.usdtContract',
       USDT_TRC20_CONTRACT,
     );
+    this.masterAddress = this.configService.get<string>('blockchain.tron.masterAddress', '');
+    this.privateKey = this.configService.get<string>('blockchain.tron.privateKey', '');
 
     this.httpClient = axios.create({
       baseURL: fullNodeUrl,
@@ -70,6 +74,17 @@ export class TronService implements OnModuleInit {
     });
 
     this.logger.log(`TRON service initialized: ${fullNodeUrl}`);
+    if (this.masterAddress) {
+      this.logger.log(`TRON master address configured: ${this.masterAddress}`);
+    }
+  }
+
+  getMasterAddress(): string {
+    return this.masterAddress;
+  }
+
+  getPrivateKey(): string {
+    return this.privateKey;
   }
 
   getHttpClient(): AxiosInstance {

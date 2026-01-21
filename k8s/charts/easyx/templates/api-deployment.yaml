@@ -94,22 +94,47 @@ spec:
               value: "true"
             - name: ETH_RPC_URL
               value: {{ .Values.blockchain.eth.rpcUrl | quote }}
+            {{- if .Values.blockchain.eth.privateKey }}
+            - name: EVM_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "easyx.fullname" . }}-blockchain-secrets
+                  key: evm-private-key
+            {{- end }}
+            {{- if .Values.blockchain.eth.mnemonic }}
             - name: ETH_MNEMONIC
               valueFrom:
                 secretKeyRef:
                   name: {{ include "easyx.fullname" . }}-blockchain-secrets
                   key: eth-mnemonic
             {{- end }}
+            {{- end }}
             {{- if .Values.blockchain.tron.enabled }}
             - name: TRON_WATCHER_ENABLED
               value: "true"
-            - name: TRON_FULL_NODE_URL
+            - name: TRON_FULLNODE_URL
               value: {{ .Values.blockchain.tron.fullNodeUrl | quote }}
-            - name: TRON_API_KEY
+            {{- if .Values.blockchain.tron.apiKey }}
+            - name: TRONGRID_API_KEY
               valueFrom:
                 secretKeyRef:
                   name: {{ include "easyx.fullname" . }}-blockchain-secrets
                   key: tron-api-key
+            {{- end }}
+            {{- if .Values.blockchain.tron.privateKey }}
+            - name: TRON_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "easyx.fullname" . }}-blockchain-secrets
+                  key: tron-private-key
+            {{- end }}
+            {{- if .Values.blockchain.tron.masterAddress }}
+            - name: TRON_MASTER_ADDRESS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "easyx.fullname" . }}-blockchain-secrets
+                  key: tron-master-address
+            {{- end }}
             {{- end }}
           livenessProbe:
             {{- toYaml .Values.api.livenessProbe | nindent 12 }}

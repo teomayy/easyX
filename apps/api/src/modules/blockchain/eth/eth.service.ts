@@ -19,7 +19,8 @@ const USDT_CONTRACT_ADDRESS = '0xdAC17F958D2ee523a2206206994597C13D831ec7';
 export class EthService implements OnModuleInit {
   private readonly logger = new Logger(EthService.name);
   private provider: JsonRpcProvider;
-  private masterWallet: HDNodeWallet;
+  private masterWallet: HDNodeWallet | ethers.Wallet | null = null;
+  private masterAddress: string = '';
   private usdtContract: Contract;
 
   constructor(
@@ -29,7 +30,9 @@ export class EthService implements OnModuleInit {
 
   async onModuleInit() {
     const rpcUrl = this.configService.get<string>('blockchain.eth.rpcUrl', 'http://localhost:8545');
+    const privateKey = this.configService.get<string>('blockchain.eth.privateKey', '');
     const mnemonic = this.configService.get<string>('blockchain.eth.mnemonic', '');
+    const configuredAddress = this.configService.get<string>('blockchain.eth.masterAddress', '');
     const contractAddress = this.configService.get<string>(
       'blockchain.eth.usdtContract',
       USDT_CONTRACT_ADDRESS,
@@ -37,13 +40,39 @@ export class EthService implements OnModuleInit {
 
     this.provider = new JsonRpcProvider(rpcUrl);
 
-    if (mnemonic) {
-      this.masterWallet = ethers.HDNodeWallet.fromPhrase(mnemonic);
-      this.logger.log('ETH master wallet initialized');
+    // Initialize master wallet from private key or mnemonic
+    if (privateKey) {
+      try {
+        const key = privateKey.startsWith('0x') ? privateKey : `0x${privateKey}`;
+        this.masterWallet = new ethers.Wallet(key, this.provider);
+        this.masterAddress = this.masterWallet.address;
+        this.logger.log(`ETH master wallet initialized from private key: ${this.masterAddress}`);
+      } catch (error) {
+        this.logger.error(`Failed to initialize ETH wallet from private key: ${error}`);
+      }
+    } else if (mnemonic) {
+      try {
+        this.masterWallet = ethers.HDNodeWallet.fromPhrase(mnemonic);
+        this.masterAddress = this.masterWallet.address;
+        this.logger.log(`ETH master wallet initialized from mnemonic: ${this.masterAddress}`);
+      } catch (error) {
+        this.logger.error(`Failed to initialize ETH wallet from mnemonic: ${error}`);
+      }
+    } else if (configuredAddress) {
+      this.masterAddress = configuredAddress;
+      this.logger.log(`ETH master address configured: ${this.masterAddress}`);
     }
 
     this.usdtContract = new Contract(contractAddress, ERC20_ABI, this.provider);
     this.logger.log(`ETH service initialized: ${rpcUrl}`);
+  }
+
+  getMasterAddress(): string {
+    return this.masterAddress;
+  }
+
+  getMasterWallet(): HDNodeWallet | ethers.Wallet | null {
+    return this.masterWallet;
   }
 
   getProvider(): JsonRpcProvider {
@@ -56,13 +85,25 @@ export class EthService implements OnModuleInit {
 
   async generateAddress(userId: string): Promise<string> {
     try {
-      // Derive address from master wallet using user index
+      if (!this.masterWallet) {
+        throw new Error('ETH master wallet not initialized');
+      }
+
+      // Derive address from master wallet using user index (only for HD wallets)
       const userCount = await this.prisma.walletAddress.count({
         where: { network: Network.ERC20 },
       });
 
-      const derivedWallet = this.masterWallet.deriveChild(userCount);
-      const address = derivedWallet.address;
+      let address: string;
+      if ('deriveChild' in this.masterWallet && typeof this.masterWallet.deriveChild === 'function') {
+        // HD Wallet - can derive child addresses
+        const derivedWallet = (this.masterWallet as HDNodeWallet).deriveChild(userCount);
+        address = derivedWallet.address;
+      } else {
+        // Regular wallet - use master address (single address mode)
+        address = this.masterWallet.address;
+        this.logger.warn('Using single address mode - consider using HD wallet for multi-user support');
+      }
 
       await this.prisma.walletAddress.create({
         data: {

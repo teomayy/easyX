@@ -123,11 +123,12 @@ blockchain:
 
   eth:
     enabled: true
-    rpcUrl: https://eth.llamarpc.com
+    rpcUrl: https://eth-mainnet.g.alchemy.com/v2/tZgSBLk6aPnvf1979y1Qcm77cuV6T1lx
 
   tron:
     enabled: true
     fullNodeUrl: https://api.trongrid.io
+    usdtContract: TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t
 
 # PostgreSQL - Managed separately (already exists)
 postgresql:

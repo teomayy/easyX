@@ -4,7 +4,6 @@ import { BtcService } from '../blockchain/btc/btc.service';
 import { LtcService } from '../blockchain/ltc/ltc.service';
 import { EthService } from '../blockchain/eth/eth.service';
 import { TronService } from '../blockchain/tron/tron.service';
-import { ConfigService } from '@nestjs/config';
 
 export interface WalletBalance {
   currency: string;
@@ -33,7 +32,6 @@ export class AdminWalletService {
     private readonly ltcService: LtcService,
     private readonly ethService: EthService,
     private readonly tronService: TronService,
-    private readonly configService: ConfigService,
   ) {}
 
   async getWalletBalances(): Promise<WalletBalance[]> {
@@ -77,7 +75,7 @@ export class AdminWalletService {
 
     // ETH Balance (master wallet)
     try {
-      const ethMasterAddress = this.configService.get<string>('blockchain.eth.masterAddress', '');
+      const ethMasterAddress = this.ethService.getMasterAddress();
       if (ethMasterAddress) {
         const ethBalance = await this.ethService.getEthBalance(ethMasterAddress);
         balances.push({
@@ -107,7 +105,7 @@ export class AdminWalletService {
 
     // TRX and USDT TRC20 Balance
     try {
-      const tronMasterAddress = this.configService.get<string>('blockchain.tron.masterAddress', '');
+      const tronMasterAddress = this.tronService.getMasterAddress();
       if (tronMasterAddress) {
         const trxBalance = await this.tronService.getTrxBalance(tronMasterAddress);
         balances.push({
@@ -231,39 +229,49 @@ export class AdminWalletService {
   }) {
     const { currency, userId, limit = 50, offset = 0 } = params;
 
-    const where: Record<string, unknown> = {};
-    if (currency) where.currency = currency;
-    if (userId) where.userId = userId;
+    try {
+      const where: Record<string, unknown> = {};
+      if (currency) where.currency = currency;
+      if (userId) where.userId = userId;
 
-    const [addresses, total] = await Promise.all([
-      this.prisma.walletAddress.findMany({
-        where,
-        include: {
-          user: {
-            select: { id: true, phone: true, username: true },
+      const [addresses, total] = await Promise.all([
+        this.prisma.walletAddress.findMany({
+          where,
+          include: {
+            user: {
+              select: { id: true, phone: true, username: true },
+            },
           },
-        },
-        orderBy: { createdAt: 'desc' },
-        take: limit,
-        skip: offset,
-      }),
-      this.prisma.walletAddress.count({ where }),
-    ]);
+          orderBy: { createdAt: 'desc' },
+          take: limit,
+          skip: offset,
+        }),
+        this.prisma.walletAddress.count({ where }),
+      ]);
 
-    return { addresses, total, limit, offset };
+      return { addresses, total, limit, offset };
+    } catch (error) {
+      this.logger.error(`Failed to get wallet addresses: ${error}`);
+      return { addresses: [], total: 0, limit, offset };
+    }
   }
 
   async getAddressStats() {
-    const stats = await this.prisma.walletAddress.groupBy({
-      by: ['currency', 'network'],
-      _count: { id: true },
-    });
+    try {
+      const stats = await this.prisma.walletAddress.groupBy({
+        by: ['currency', 'network'],
+        _count: { id: true },
+      });
 
-    return stats.map((s) => ({
-      currency: s.currency,
-      network: s.network,
-      count: s._count.id,
-    }));
+      return stats.map((s) => ({
+        currency: s.currency,
+        network: s.network,
+        count: s._count.id,
+      }));
+    } catch (error) {
+      this.logger.error(`Failed to get address stats: ${error}`);
+      return [];
+    }
   }
 
   async sendCrypto(params: {

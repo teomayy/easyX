@@ -24,6 +24,9 @@ export class LtcService implements OnModuleInit {
   }
 
   getRpcClient(): BitcoinRpcClient {
+    if (!this.rpcClient) {
+      throw new Error('LTC RPC client not initialized');
+    }
     return this.rpcClient;
   }
 

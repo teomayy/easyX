@@ -95,7 +95,10 @@ jobs:
             --set blockchain.btc.rpcPassword="${{ secrets.BTC_RPC_PASSWORD }}" \
             --set blockchain.ltc.rpcPassword="${{ secrets.LTC_RPC_PASSWORD }}" \
             --set "blockchain.eth.mnemonic=${{ secrets.ETH_MNEMONIC }}" \
-            --set blockchain.tron.apiKey="${{ secrets.TRON_API_KEY }}" \
+            --set "blockchain.eth.privateKey=${{ secrets.EVM_PRIVATE_KEY }}" \
+            --set "blockchain.tron.apiKey=${{ secrets.TRONGRID_API_KEY }}" \
+            --set "blockchain.tron.privateKey=${{ secrets.TRON_PRIVATE_KEY }}" \
+            --set "blockchain.tron.masterAddress=${{ secrets.TRON_MASTER_ADDRESS }}" \
             --wait \
             --timeout 15m
 
