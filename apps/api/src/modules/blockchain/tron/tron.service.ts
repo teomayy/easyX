@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService, Currency, Network } from '@easyx/database';
 import axios, { AxiosInstance } from 'axios';
+import { TronWeb } from 'tronweb';
 
 // USDT TRC20 Contract Address (Mainnet)
 const USDT_TRC20_CONTRACT = 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t';
@@ -42,6 +43,7 @@ interface TronTransaction {
 export class TronService implements OnModuleInit {
   private readonly logger = new Logger(TronService.name);
   private httpClient: AxiosInstance;
+  private tronWeb: TronWeb;
   private apiKey: string;
   private contractAddress: string;
   private masterAddress: string;
@@ -71,6 +73,13 @@ export class TronService implements OnModuleInit {
         'Content-Type': 'application/json',
         ...(this.apiKey && { 'TRON-PRO-API-KEY': this.apiKey }),
       },
+    });
+
+    // Initialize TronWeb instance
+    this.tronWeb = new TronWeb({
+      fullHost: fullNodeUrl,
+      headers: this.apiKey ? { 'TRON-PRO-API-KEY': this.apiKey } : {},
+      privateKey: this.privateKey || undefined,
     });
 
     this.logger.log(`TRON service initialized: ${fullNodeUrl}`);
@@ -137,49 +146,64 @@ export class TronService implements OnModuleInit {
 
   async validateAddress(address: string): Promise<boolean> {
     try {
-      const response = await this.httpClient.post('/wallet/validateaddress', {
-        address,
-      });
-      return response.data.result;
+      return this.tronWeb.isAddress(address);
     } catch {
       return false;
     }
   }
 
+  getTronWeb(): TronWeb {
+    return this.tronWeb;
+  }
+
   async getUsdtBalance(address: string): Promise<string> {
     try {
+      const encodedAddress = this.encodeAddress(address);
+      this.logger.debug(`Fetching USDT balance for ${address}, encoded: ${encodedAddress}`);
+
       const response = await this.httpClient.post(
         '/wallet/triggerconstantcontract',
         {
           owner_address: address,
           contract_address: this.contractAddress,
           function_selector: 'balanceOf(address)',
-          parameter: this.encodeAddress(address),
+          parameter: encodedAddress,
         },
       );
+
+      if (response.data.result?.code) {
+        this.logger.error(`TRC20 balance error: ${response.data.result.message || response.data.result.code}`);
+        return '0';
+      }
 
       if (response.data.constant_result && response.data.constant_result[0]) {
         const hex = response.data.constant_result[0];
         const balance = BigInt('0x' + hex);
-        return (Number(balance) / 1e6).toString(); // USDT TRC20 has 6 decimals
+        const formattedBalance = (Number(balance) / 1e6).toString(); // USDT TRC20 has 6 decimals
+        this.logger.debug(`USDT balance for ${address}: ${formattedBalance}`);
+        return formattedBalance;
       }
 
+      this.logger.warn(`No constant_result in response for ${address}`);
       return '0';
     } catch (error) {
-      this.logger.error(`Failed to get TRC20 USDT balance: ${error}`);
+      this.logger.error(`Failed to get TRC20 USDT balance for ${address}: ${error}`);
       return '0';
     }
   }
 
   async getTrxBalance(address: string): Promise<string> {
     try {
+      this.logger.debug(`Fetching TRX balance for ${address}`);
       const response = await this.httpClient.post('/wallet/getaccount', {
         address,
       });
       const balance = response.data.balance || 0;
-      return (balance / 1e6).toString(); // TRX has 6 decimals
+      const formattedBalance = (balance / 1e6).toString(); // TRX has 6 decimals
+      this.logger.debug(`TRX balance for ${address}: ${formattedBalance}`);
+      return formattedBalance;
     } catch (error) {
-      this.logger.error(`Failed to get TRX balance: ${error}`);
+      this.logger.error(`Failed to get TRX balance for ${address}: ${error}`);
       return '0';
     }
   }
@@ -259,8 +283,11 @@ export class TronService implements OnModuleInit {
   }
 
   private encodeAddress(address: string): string {
-    // Convert base58 address to hex and pad to 64 characters
-    // This is a simplified version - use TronWeb for production
-    return address.padStart(64, '0');
+    // Convert Base58 TRON address to hex format for smart contract calls
+    // TronWeb.address.toHex returns hex with '41' prefix (TRON's address prefix)
+    // We need to remove the '41' prefix and pad to 64 characters for ABI encoding
+    const hexAddress = this.tronWeb.address.toHex(address);
+    // Remove '41' prefix and pad to 64 characters (32 bytes)
+    return hexAddress.replace(/^41/, '').padStart(64, '0');
   }
 }
