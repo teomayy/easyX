@@ -45,13 +45,13 @@ interface User {
   };
 }
 
-const kycStatuses = ['', 'NONE', 'PENDING', 'VERIFIED', 'REJECTED'];
+const kycStatuses = ['all', 'NONE', 'PENDING', 'VERIFIED', 'REJECTED'];
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [kycFilter, setKycFilter] = useState('');
+  const [kycFilter, setKycFilter] = useState('all');
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -68,7 +68,7 @@ export default function UsersPage() {
     try {
       const response = await adminUsersApi.getUsers({
         search: search || undefined,
-        kycStatus: kycFilter || undefined,
+        kycStatus: kycFilter === 'all' ? undefined : kycFilter,
         limit,
         offset: page * limit,
       });
@@ -166,7 +166,7 @@ export default function UsersPage() {
                   <SelectValue placeholder="KYC" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Все</SelectItem>
+                  <SelectItem value="all">Все</SelectItem>
                   {kycStatuses.slice(1).map((status) => (
                     <SelectItem key={status} value={status}>
                       {status}

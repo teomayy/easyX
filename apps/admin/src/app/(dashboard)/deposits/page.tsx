@@ -38,12 +38,12 @@ interface Deposit {
   };
 }
 
-const statuses = ['', 'PENDING', 'CONFIRMED', 'FAILED'];
+const statuses = ['all', 'PENDING', 'CONFIRMED', 'FAILED'];
 
 export default function DepositsPage() {
   const [deposits, setDeposits] = useState<Deposit[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
   const limit = 50;
@@ -56,7 +56,7 @@ export default function DepositsPage() {
     setIsLoading(true);
     try {
       const response = await adminDepositsApi.getDeposits({
-        status: statusFilter || undefined,
+        status: statusFilter === 'all' ? undefined : statusFilter,
         limit,
         offset: page * limit,
       });
@@ -160,7 +160,7 @@ export default function DepositsPage() {
                 <SelectValue placeholder="Статус" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Все</SelectItem>
+                <SelectItem value="all">Все</SelectItem>
                 {statuses.slice(1).map((s) => (
                   <SelectItem key={s} value={s}>
                     {s}

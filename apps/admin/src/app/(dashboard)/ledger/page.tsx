@@ -39,16 +39,16 @@ interface LedgerEntry {
   };
 }
 
-const currencies = ['', 'BTC', 'LTC', 'USDT_TRC20', 'USDT_ERC20', 'UZS'];
-const operations = ['', 'deposit', 'withdrawal', 'p2p', 'swap'];
-const entryTypes = ['', 'CREDIT', 'DEBIT', 'HOLD', 'RELEASE'];
+const currencies = ['all', 'BTC', 'LTC', 'USDT_TRC20', 'USDT_ERC20', 'UZS'];
+const operations = ['all', 'deposit', 'withdrawal', 'p2p', 'swap'];
+const entryTypes = ['all', 'CREDIT', 'DEBIT', 'HOLD', 'RELEASE'];
 
 export default function LedgerPage() {
   const [entries, setEntries] = useState<LedgerEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [userIdFilter, setUserIdFilter] = useState('');
-  const [currencyFilter, setCurrencyFilter] = useState('');
-  const [operationFilter, setOperationFilter] = useState('');
+  const [currencyFilter, setCurrencyFilter] = useState('all');
+  const [operationFilter, setOperationFilter] = useState('all');
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
   const limit = 50;
@@ -62,8 +62,8 @@ export default function LedgerPage() {
     try {
       const response = await adminLedgerApi.getEntries({
         userId: userIdFilter || undefined,
-        currency: currencyFilter || undefined,
-        operation: operationFilter || undefined,
+        currency: currencyFilter === 'all' ? undefined : currencyFilter,
+        operation: operationFilter === 'all' ? undefined : operationFilter,
         limit,
         offset: page * limit,
       });
@@ -155,7 +155,7 @@ export default function LedgerPage() {
                   <SelectValue placeholder="Валюта" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Все</SelectItem>
+                  <SelectItem value="all">Все</SelectItem>
                   {currencies.slice(1).map((c) => (
                     <SelectItem key={c} value={c}>
                       {c}
@@ -171,7 +171,7 @@ export default function LedgerPage() {
                   <SelectValue placeholder="Операция" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Все</SelectItem>
+                  <SelectItem value="all">Все</SelectItem>
                   {operations.slice(1).map((op) => (
                     <SelectItem key={op} value={op}>
                       {op}
