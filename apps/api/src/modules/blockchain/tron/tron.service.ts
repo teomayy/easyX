@@ -256,13 +256,4 @@ export class TronService implements OnModuleInit {
       return [];
     }
   }
-
-  private encodeAddress(address: string): string {
-    // Convert Base58 TRON address to hex format for smart contract calls
-    // TronWeb.address.toHex returns hex with '41' prefix (TRON's address prefix)
-    // We need to remove the '41' prefix and pad to 64 characters for ABI encoding
-    const hexAddress = this.tronWeb.address.toHex(address);
-    // Remove '41' prefix and pad to 64 characters (32 bytes)
-    return hexAddress.replace(/^41/, '').padStart(64, '0');
-  }
 }
