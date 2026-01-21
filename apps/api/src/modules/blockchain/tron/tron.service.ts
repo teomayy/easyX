@@ -158,34 +158,12 @@ export class TronService implements OnModuleInit {
 
   async getUsdtBalance(address: string): Promise<string> {
     try {
-      const encodedAddress = this.encodeAddress(address);
-      this.logger.debug(`Fetching USDT balance for ${address}, encoded: ${encodedAddress}`);
-
-      const response = await this.httpClient.post(
-        '/wallet/triggerconstantcontract',
-        {
-          owner_address: address,
-          contract_address: this.contractAddress,
-          function_selector: 'balanceOf(address)',
-          parameter: encodedAddress,
-        },
-      );
-
-      if (response.data.result?.code) {
-        this.logger.error(`TRC20 balance error: ${response.data.result.message || response.data.result.code}`);
-        return '0';
-      }
-
-      if (response.data.constant_result && response.data.constant_result[0]) {
-        const hex = response.data.constant_result[0];
-        const balance = BigInt('0x' + hex);
-        const formattedBalance = (Number(balance) / 1e6).toString(); // USDT TRC20 has 6 decimals
-        this.logger.debug(`USDT balance for ${address}: ${formattedBalance}`);
-        return formattedBalance;
-      }
-
-      this.logger.warn(`No constant_result in response for ${address}`);
-      return '0';
+      // Use TronWeb contract to call balanceOf - handles encoding properly
+      const contract = await this.tronWeb.contract().at(this.contractAddress);
+      const balance = await contract.methods.balanceOf(address).call();
+      const formattedBalance = (Number(balance) / 1e6).toString(); // USDT TRC20 has 6 decimals
+      this.logger.debug(`USDT balance for ${address}: ${formattedBalance}`);
+      return formattedBalance;
     } catch (error) {
       this.logger.error(`Failed to get TRC20 USDT balance for ${address}: ${error}`);
       return '0';
@@ -194,12 +172,9 @@ export class TronService implements OnModuleInit {
 
   async getTrxBalance(address: string): Promise<string> {
     try {
-      this.logger.debug(`Fetching TRX balance for ${address}`);
-      const response = await this.httpClient.post('/wallet/getaccount', {
-        address,
-      });
-      const balance = response.data.balance || 0;
-      const formattedBalance = (balance / 1e6).toString(); // TRX has 6 decimals
+      // Use TronWeb to get TRX balance
+      const balanceSun = await this.tronWeb.trx.getBalance(address);
+      const formattedBalance = (balanceSun / 1e6).toString(); // TRX has 6 decimals (sun to TRX)
       this.logger.debug(`TRX balance for ${address}: ${formattedBalance}`);
       return formattedBalance;
     } catch (error) {
